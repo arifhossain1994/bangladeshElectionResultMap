@@ -1,0 +1,1837 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com https://code.highcharts.com; style-src 'self' 'unsafe-inline' https://unpkg.com; img-src 'self' data:; connect-src 'self' https://unpkg.com https://arifultimate.goatcounter.com;">
+    <title>Bangladesh Election Result 2026</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/modules/item-series.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            background: white;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+            letter-spacing: 1px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .visitor-counter {
+            position: relative;
+            margin-left: auto;
+            color: #666;
+            font-size: 0.75em;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+
+        .visitor-counter-icon {
+            font-size: 0.9em;
+        }
+
+        .visitor-counter-number {
+            font-weight: 600;
+            min-width: 35px;
+        }
+
+        .visitor-counter-dot {
+            width: 8px;
+            height: 8px;
+            background: #4ecdc4;
+            border-radius: 50%;
+            animation: visitPulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes visitPulse {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.6;
+                transform: scale(1.2);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .live-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 5px;
+            padding: 8px 20px 0 20px;
+            font-size: 0.85em;
+            color: #666;
+            width: 100%;
+        }
+
+        @keyframes scroll-left {
+            0% {
+                transform: translateX(0%);
+            }
+
+            100% {
+                transform: translateX(-100%);
+            }
+        }
+
+        .live-dot-container {
+            position: relative;
+            width: 12px;
+            height: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .live-dot {
+            width: 12px;
+            height: 12px;
+            background: #ff0000;
+            border-radius: 50%;
+            animation: pulse 1.5s ease-in-out infinite;
+            position: relative;
+            z-index: 2;
+        }
+
+        .live-ring {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border: 2px solid #ff0000;
+            border-radius: 50%;
+            animation: pulseRing 1.5s ease-in-out infinite;
+            z-index: 1;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.6;
+                transform: scale(1.2);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes pulseRing {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.8);
+                opacity: 0.3;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        #map {
+            width: 100%;
+            height: 700px;
+            background: white;
+        }
+
+        #mapContainer {
+            display: flex;
+            justify-content: flex-end;
+            flex: 1.5;
+            width: 100%;
+            padding-left: 20px;
+        }
+
+        .controls {
+            position: sticky;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 6px;
+            z-index: 9999;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 12px 20px;
+            border-radius: 0;
+            box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        button {
+            padding: 10px 6px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8em;
+            transition: transform 0.2s, box-shadow 0.2s;
+            min-width: 40px;
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .map-section {
+            width: 100%;
+            flex: 1;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .map-wrapper {
+            display: flex;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .data-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .data-box {
+            background: #f8f9fa;
+            padding: 15px;
+        }
+
+        .data-box h3 {
+            font-size: 1.2em;
+            color: #333;
+            margin-bottom: 12px;
+            font-weight: 600;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 8px;
+        }
+
+        .data-box-content {
+            color: #666;
+            font-size: 0.95em;
+            line-height: 1.6;
+        }
+
+        .seat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .seat-row strong {
+            flex: 1;
+        }
+
+        .seat-number {
+            font-weight: 600;
+            color: #667eea;
+            min-width: 100px;
+            width: 100px;
+            text-align: right;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 6px;
+        }
+
+        .seat-number .seats {
+            font-weight: 600;
+            color: #667eea;
+            width: 30px;
+            text-align: right;
+        }
+
+        .seat-number .percentage {
+            color: #764ba2;
+            font-size: 0.85em;
+            width: 40px;
+            text-align: right;
+        }
+
+        .seat-number .pipe {
+            color: #ddd;
+            margin: 0 3px;
+        }
+
+        .seat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e0e0e0;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        #mapContainer {
+            flex: 1;
+        }
+
+        .parliament-bar {
+            background: #ffffff;
+            padding: 15px;
+            margin: 20px;
+            border-radius: 8px;
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+        }
+
+        /* Referendum progress bar styles */
+        .referendum-bar {
+            background: linear-gradient(180deg, rgba(255, 230, 240, 0.9), rgba(255, 240, 245, 0.95));
+            padding: 15px;
+            margin: 20px;
+            border-radius: 8px;
+            /* match parliament-bar */
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            /* match parliament-bar */
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+            /* match parliament-bar */
+        }
+
+        .referendum-title {
+            font-size: 0.9em;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .referendum-container {
+            display: flex;
+            gap: 0;
+            position: relative;
+            height: 32px;
+            border-radius: 4px;
+            overflow: hidden;
+            background: rgba(242, 220, 228, 0.4);
+            width: 100%;
+            /* ensure full width like parliament container */
+            box-sizing: border-box;
+        }
+
+        /* Middle marker for referendum bar (50% indicator) */
+        .ref-middle-line {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #764ba2;
+            z-index: 10;
+            transform: translateX(-50%);
+            pointer-events: none;
+        }
+
+        .ref-segment {
+            height: 100%;
+            transition: width 0.2s linear;
+            display: flex;
+            align-items: center;
+            padding-left: 0;
+            /* remove left inset so segments reach edges */
+            color: white;
+            font-weight: 600;
+            font-size: 0.85em;
+            white-space: nowrap;
+        }
+
+        .ref-yes {
+            background: #2ecc71;
+        }
+
+        .ref-no {
+            background: #ff6b6b;
+        }
+
+        .ref-undecided {
+            background: #d0d3d6;
+            /* lighter gray for undecided */
+            color: #333;
+            /* darker text for readability */
+        }
+
+        .ref-count {
+            margin-left: 8px;
+            font-weight: 700;
+            font-size: 0.85em;
+        }
+
+        /* Referendum legend under the bar */
+        .ref-legend {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            margin-top: 10px;
+            align-items: center;
+            font-size: 0.75em;
+            /* slightly smaller legend text */
+            color: #444;
+            width: 100%;
+        }
+
+        .ref-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1 1 0;
+            justify-content: center;
+        }
+
+        .ref-legend-color {
+            width: 14px;
+            height: 14px;
+            border-radius: 3px;
+            display: inline-block;
+        }
+
+        .parliament-title {
+            font-size: 0.9em;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .parliament-container {
+            display: flex;
+            gap: 0;
+            position: relative;
+            height: 30px;
+            border-radius: 4px;
+            overflow: hidden;
+            background: #f0f0f0;
+        }
+
+        .parliament-seat {
+            flex: 1;
+            height: 100%;
+            position: relative;
+        }
+
+        .parliament-seat.bnp {
+            background: #ff6b6b;
+        }
+
+        .parliament-seat.jamaat {
+            background: #4ecdc4;
+        }
+
+        .parliament-seat.ncp {
+            background: #95e1d3;
+        }
+
+        .parliament-seat.bkm {
+            background: #1a9b8a;
+        }
+
+        .parliament-seat.km {
+            background: #2fb5a0;
+        }
+
+        .parliament-seat.bka {
+            background: #45cdb7;
+        }
+
+        .parliament-seat.nip {
+            background: #059b9b;
+        }
+
+        .parliament-seat.ldp {
+            background: #5dd9c9;
+        }
+
+        .parliament-seat.abp {
+            background: #2abaa0;
+        }
+
+        .parliament-seat.jgp {
+            background: #70eee0;
+        }
+
+        .parliament-seat.bdp {
+            background: #0d8b82;
+        }
+
+        .parliament-seat.blp {
+            background: #3dc9b8;
+        }
+
+        .parliament-seat.ind {
+            background: #555555;
+        }
+
+        .parliament-seat.jwp {
+            background: #aa96da;
+        }
+
+        .parliament-seat.other {
+            background: #e8e8e8;
+        }
+
+        .majority-line {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #764ba2;
+            z-index: 10;
+        }
+
+        #container {
+            width: 100%;
+            height: 350px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .majority-label {
+            position: absolute;
+            top: -22px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.75em;
+            font-weight: 600;
+            color: #764ba2;
+            white-space: nowrap;
+        }
+
+        .parliament-legend {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 0.85em;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 2px;
+        }
+
+        .legend-color.bnp {
+            background: #ff6b6b;
+        }
+
+        .legend-color.jamaat {
+            background: #4ecdc4;
+        }
+
+        .legend-color.ncp {
+            background: #95e1d3;
+        }
+
+        .legend-color.bkm {
+            background: #1a9b8a;
+        }
+
+        .legend-color.km {
+            background: #2fb5a0;
+        }
+
+        .legend-color.bka {
+            background: #45cdb7;
+        }
+
+        .legend-color.nip {
+            background: #059b9b;
+        }
+
+        .legend-color.ldp {
+            background: #5dd9c9;
+        }
+
+        .legend-color.abp {
+            background: #2abaa0;
+        }
+
+        .legend-color.jgp {
+            background: #70eee0;
+        }
+
+        .legend-color.bdp {
+            background: #0d8b82;
+        }
+
+        .legend-color.blp {
+            background: #3dc9b8;
+        }
+
+        .legend-color.ind {
+            background: #555555;
+        }
+
+        .legend-color.jwp {
+            background: #aa96da;
+        }
+
+        .legend-color.other {
+            background: #e8e8e8;
+        }
+
+        .parliament-map-container {
+            display: grid;
+            grid-template-columns: repeat(30, 1fr);
+            gap: 2px;
+            margin-top: 10px;
+        }
+
+        /* Mobile Responsive Design */
+        @media (max-width: 1024px) {
+            .map-wrapper {
+                flex-direction: column;
+                gap: 15px;
+                padding: 15px;
+            }
+
+            #mapContainer {
+                flex: 1;
+            }
+
+            #map {
+                height: 500px;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .header p {
+                font-size: 1em;
+            }
+
+            .controls {
+                position: sticky;
+                bottom: 0;
+            }
+
+            button {
+                padding: 8px 5px;
+                font-size: 0.75em;
+                min-width: 35px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                border-radius: 8px;
+            }
+
+            .header {
+                padding: 20px 15px;
+            }
+
+            .header h1 {
+                font-size: 1.5em;
+                margin-bottom: 8px;
+            }
+
+            .header p {
+                font-size: 0.9em;
+            }
+
+            .map-wrapper {
+                flex-direction: column;
+                gap: 10px;
+                padding: 10px;
+            }
+
+            .map-section {
+                min-height: 400px;
+                width: 100%;
+            }
+
+            #map {
+                height: 400px;
+                width: 100%;
+            }
+
+            #mapContainer {
+                flex: 1;
+                border-left: none;
+                padding-left: 0;
+                padding-bottom: 10px;
+                width: 100%;
+                display: block;
+                min-height: 400px;
+                height: 400px;
+            }
+
+            .data-section {
+                gap: 15px;
+            }
+
+            .data-box {
+                padding: 12px;
+            }
+
+            .data-box h3 {
+                font-size: 1.1em;
+                margin-bottom: 10px;
+            }
+
+            .data-box-content {
+                font-size: 0.9em;
+            }
+
+            .seat-row {
+                margin-bottom: 6px;
+            }
+
+            .seat-number {
+                min-width: 80px;
+                width: 80px;
+            }
+
+            .parliament-bar {
+                margin: 15px;
+                padding: 12px;
+            }
+
+            /* Ensure referendum bar is visible and sized on tablet/mobile */
+            .referendum-bar {
+                margin: 15px;
+                padding: 12px;
+            }
+
+            .referendum-container {
+                height: 28px;
+            }
+
+            .ref-segment {
+                font-size: 0.78em;
+            }
+
+            .parliament-map-container {
+                grid-template-columns: repeat(20, 1fr);
+                gap: 1px;
+            }
+
+            .parliament-legend {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .legend-item {
+                gap: 4px;
+                font-size: 0.8em;
+            }
+
+            .controls {
+                position: sticky;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                gap: 4px;
+                padding: 6px 8px;
+            }
+
+            button {
+                padding: 6px 4px;
+                font-size: 0.7em;
+                min-width: 32px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 5px;
+            }
+
+            .container {
+                border-radius: 6px;
+            }
+
+            .header {
+                padding: 15px 10px;
+            }
+
+            .header h1 {
+                font-size: 1.3em;
+                margin-bottom: 5px;
+            }
+
+            .header p {
+                font-size: 0.85em;
+            }
+
+            .map-section {
+                min-height: 300px;
+                width: 100%;
+            }
+
+            #map {
+                height: 300px;
+                width: 100%;
+            }
+
+            #mapContainer {
+                width: 100%;
+                display: block;
+                padding-left: 0;
+                border-left: none;
+                min-height: 300px;
+                height: 300px;
+            }
+
+            .map-wrapper {
+                padding: 8px;
+                gap: 8px;
+            }
+
+            .data-section {
+                gap: 10px;
+            }
+
+            .data-box {
+                padding: 10px;
+            }
+
+            .data-box h3 {
+                font-size: 1em;
+                margin-bottom: 8px;
+            }
+
+            .data-box-content {
+                font-size: 0.85em;
+            }
+
+            .seat-row {
+                flex-wrap: nowrap;
+                margin-bottom: 5px;
+                gap: 5px;
+            }
+
+            .seat-row strong {
+                flex: 0 1 auto;
+            }
+
+            .seat-number {
+                flex: 1 1 auto;
+                justify-content: flex-end;
+            }
+
+            .parliament-bar {
+                margin: 10px;
+                padding: 10px;
+            }
+
+            /* Mobile adjustments for referendum bar */
+            .referendum-bar {
+                margin: 10px;
+                padding: 10px;
+            }
+
+            .referendum-container {
+                height: 24px;
+            }
+
+            .ref-segment {
+                font-size: 0.75em;
+            }
+
+            .parliament-title {
+                font-size: 0.85em;
+                margin-bottom: 8px;
+            }
+
+            .parliament-map-container {
+                grid-template-columns: repeat(15, 1fr);
+                gap: 1px;
+            }
+
+            .parliament-map-seat {
+                border-radius: 50%;
+            }
+
+            .parliament-legend {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .legend-item {
+                font-size: 0.75em;
+            }
+
+            .controls {
+                position: sticky;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                gap: 3px;
+                padding: 5px 6px;
+                z-index: 9999;
+            }
+
+            button {
+                padding: 5px 3px;
+                font-size: 0.65em;
+                min-width: 28px;
+            }
+
+            .seat-header {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+        }
+
+        /* Footer styles: center disclaimer inside a white container to match page */
+        .site-footer {
+            position: static;
+            background: transparent;
+            color: #333;
+            padding: 18px 0;
+            text-align: center;
+            font-size: 0.9em;
+        }
+
+        .site-footer .footer-note {
+            display: block;
+            background: #ffffff;
+            max-width: 1200px;
+            margin: 0 auto;
+            color: #333;
+            opacity: 0.95;
+            padding: 12px 16px;
+            border-top: 1px solid #e9ecef;
+            border-bottom-left-radius: 8px;
+            border-bottom-right-radius: 8px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>2026 Bangladesh Election</h1>
+            <p>Interactive Election Results Dashboard</p>
+        </div>
+
+
+
+        <div class="live-indicator">
+            <div class="live-dot-container">
+                <div class="live-ring"></div>
+                <div class="live-dot"></div>
+            </div>
+            <span>Live (Counting Starts: 4:30PM Local Time)</span>
+            <div class="rolling-banner" id="rollingBanner" aria-live="polite" role="status">
+                <div class="rolling-banner-content" id="rollingBannerContent"></div>
+            </div>
+            <div class="visitor-counter">
+                <div class="visitor-counter-dot"></div>
+                <span id="visitor-count">Loading...</span>
+            </div>
+        </div>
+
+        <div class="referendum-bar">
+            <div class="referendum-title" style="position: relative;">
+                <span>গণভোট</span>
+                <span id="referendumTotalLabel" style="font-size:0.9em;color:#666;">0 / 127,711,793</span>
+            </div>
+            <div class="referendum-container" id="referendumContainer">
+                <div class="ref-middle-line" aria-hidden="true"></div>
+                <div class="ref-segment ref-yes" id="refYes" style="width:0%" role="img" aria-label="Yes votes"></div>
+                <div class="ref-segment ref-no" id="refNo" style="width:0%" role="img" aria-label="No votes"></div>
+                <div class="ref-segment ref-undecided" id="refUndecided" style="width:0%" role="img"
+                    aria-label="Undecided votes"></div>
+            </div>
+            <div class="ref-legend" id="refLegend">
+                <div class="ref-legend-item">
+                    <span class="ref-legend-color" style="background:#2ecc71"></span>
+                    <span>Yes: <strong id="legendYesCount">0</strong></span>
+                </div>
+                <div class="ref-legend-item">
+                    <span class="ref-legend-color" style="background:#ff6b6b"></span>
+                    <span>No: <strong id="legendNoCount">0</strong></span>
+                </div>
+                <div class="ref-legend-item">
+                    <span class="ref-legend-color" style="background:#d0d3d6"></span>
+                    <span>Undecided: <strong id="legendUndecidedCount">0</strong></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="parliament-bar">
+            <div class="parliament-title"
+                style="display: flex; justify-content: space-between; align-items: center; position: relative;">
+                <span>Seats (299)</span>
+                <span
+                    style="position: absolute; left: 50%; transform: translateX(-50%); font-size: 0.9em; color: #666;">151
+                    to Win</span>
+            </div>
+            <div class="parliament-container" id="parliamentContainer">
+                <div class="majority-label">150 (Majority)</div>
+                <div class="majority-line"></div>
+            </div>
+            <div class="parliament-legend" id="parliamentLegend">
+                <!-- Will be populated dynamically from election results -->
+            </div>
+        </div>
+
+        <div class="map-wrapper">
+            <div class="data-section">
+                <div class="data-box">
+                    <div class="seat-header">
+                        <h3 style="margin: 0;">Major Parties</h3>
+                        <span class="seat-header-right" style="margin: 0;">Seats Won | %</span>
+                    </div>
+                    <div class="data-box-content" id="majorPartiesContainer">
+                        <!-- Will be populated dynamically -->
+                    </div>
+                </div>
+                <div class="data-box" style="margin-top: 15px;">
+                    <div class="seat-header">
+                        <h3 style="margin: 0;">Parliament Seating Chart</h3>
+                    </div>
+                    <div id="container" style="margin-top: 10px;"></div>
+                    <div id="parliamentMapContainer" class="parliament-map-container" style="margin-top: 10px;"></div>
+                </div>
+            </div>
+
+            <div class="map-section">
+                <div style="padding: 15px 20px; background: #f8f9fa; border-bottom: 2px solid #667eea;">
+                    <h2 style="margin: 0; font-size: 1.3em; color: #333; font-weight: 600;">Interactive Map</h2>
+                </div>
+                <div
+                    style="color: #856404; font-weight: 500; font-size: 0.85em; text-align: center; padding: 8px 15px; background: #fffbf0; border-bottom: 1px solid #ffc107;">
+                    💡 Click on th DOT for details
+                </div>
+                <div
+                    style="display: flex; justify-content: center; gap: 6px; padding: 10px 15px; background: #f8f9fa; border-bottom: 1px solid #e0e0e0;">
+                    <button onclick="zoomIn()"
+                        style="padding: 8px 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8em;">🔍+
+                        Zoom In</button>
+                    <button onclick="zoomOut()"
+                        style="padding: 8px 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8em;">🔍-
+                        Zoom Out</button>
+                    <button onclick="resetView()"
+                        style="padding: 8px 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8em;">↻
+                        Reset View</button>
+                </div>
+                <div id="mapContainer" style="position: relative; width: 100%; min-height: 400px;">
+                    <div class="loading">Loading map...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="site-footer" role="contentinfo">
+        <div class="footer-note">⚠️ Disclaimer: Location pointers may be misaligned. Data corrections may occur later.
+        </div>
+    </footer>
+
+    <script src="electionResults.js"></script>
+    <script>
+        let map;
+        let selectedLayer = null;
+        let centerMarkers = [];
+        const initialBounds = [[20.34, 88.01], [26.64, 92.67]]; // Bangladesh coordinates
+
+        // Team configuration constant
+        const teamNameCONST = {
+            'BNP': { fullName: 'Bangladesh Nationalist Party (BNP)', id: 'bnp', color: 'bnp', group: null },
+            'JAMAAT_ISLAMI': { fullName: 'Jamaat-e-Islami', id: 'jamaat', color: 'jamaat', group: 'JAMAAT' },
+            'NCP': { fullName: 'National Citizen Party', id: 'ncp', color: 'ncp', group: 'JAMAAT' },
+            'BANGLADESH_KHELAFAT_MAJLIS': { fullName: 'Bangladesh Khelafat Majlis', id: 'bkm', color: 'jamaat', group: 'JAMAAT' },
+            'KHELAFAT_MAJLIS': { fullName: 'Khelafat Majlis', id: 'km', color: 'jamaat', group: 'JAMAAT' },
+            'BANGLADESH_KHILAFAT_ANDOLAN': { fullName: 'Bangladesh Khilafat Andolan', id: 'bka', color: 'jamaat', group: 'JAMAAT' },
+            'NIZAM_E_ISLAM_PARTY': { fullName: 'Nizam-e-Islam Party', id: 'nip', color: 'jamaat', group: 'JAMAAT' },
+            'LIBERAL_DEMOCRATIC_PARTY': { fullName: 'Liberal Democratic Party', id: 'ldp', color: 'jamaat', group: 'JAMAAT' },
+            'AMAR_BANGLADESH_PARTY': { fullName: 'Amar Bangladesh Party', id: 'abp', color: 'jamaat', group: 'JAMAAT' },
+            'JATIYA_GANOTANTRIK_PARTY': { fullName: 'Jatiya Ganotantrik Party', id: 'jgp', color: 'jamaat', group: 'JAMAAT' },
+            'BANGLADESH_DEVELOPMENT_PARTY': { fullName: 'Bangladesh Development Party', id: 'bdp', color: 'jamaat', group: 'JAMAAT' },
+            'BANGLADESH_LABOUR_PARTY': { fullName: 'Bangladesh Labour Party', id: 'blp', color: 'jamaat', group: 'JAMAAT' },
+            'INDEPENDENT': { fullName: 'Independent', id: 'ind', color: 'ind', group: null },
+            'JATIYA_PARTY': { fullName: 'Jatiya Workers Party', id: 'jwp', color: 'jwp', group: null },
+            'OTHERS': { fullName: 'Others', id: 'others', color: 'other', group: null }
+        };
+
+        // Jamaat Group mapping
+        const JAMAAT_GROUP = 'JAMAAT';
+        const JAMAAT_MEMBERS = [
+            'JAMAAT_ISLAMI', 'NCP', 'BANGLADESH_KHELAFAT_MAJLIS', 'KHELAFAT_MAJLIS',
+            'BANGLADESH_KHILAFAT_ANDOLAN', 'NIZAM_E_ISLAM_PARTY', 'LIBERAL_DEMOCRATIC_PARTY',
+            'AMAR_BANGLADESH_PARTY', 'JATIYA_GANOTANTRIK_PARTY', 'BANGLADESH_DEVELOPMENT_PARTY',
+            'BANGLADESH_LABOUR_PARTY'
+        ];
+
+        // Color map constant
+        const colorMapCONST = {
+            'bnp': '#ff6b6b',
+            'jamaat': '#4ecdc4',
+            'ncp': '#95e1d3',
+            'bkm': '#1a9b8a',
+            'km': '#2fb5a0',
+            'bka': '#45cdb7',
+            'nip': '#059b9b',
+            'ldp': '#5dd9c9',
+            'abp': '#2abaa0',
+            'jgp': '#70eee0',
+            'bdp': '#0d8b82',
+            'blp': '#3dc9b8',
+            'ind': '#555555',
+            'jwp': '#aa96da',
+            'other': '#d8bfd8'
+        };
+
+        // SVG icon templates
+        const SVG_ICONS = {
+            small: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><circle cx="12" cy="12" r="4" fill="%23ff6b6b" stroke="%23fff" stroke-width="1"/></svg>',
+            medium: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><circle cx="12" cy="12" r="6" fill="%23ff6b6b" stroke="%23fff" stroke-width="2"/></svg>',
+            large: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><circle cx="12" cy="12" r="8" fill="%23ff4757" stroke="%23fff" stroke-width="2"/></svg>',
+            'extra-large': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><circle cx="12" cy="12" r="10" fill="%23ff2e3b" stroke="%23fff" stroke-width="2.5"/></svg>'
+        };
+
+        // Helper variables for tracking current icon size
+        let currentIconSize = 'medium';
+        function getCurrentIconSize() {
+            return currentIconSize;
+        }
+
+        // Helper function to get next larger size for hover effect
+        function getHoverIconSize(currentSize) {
+            const sizeProgression = ['small', 'medium', 'large', 'extra-large'];
+            const currentIndex = sizeProgression.indexOf(currentSize);
+            if (currentIndex < sizeProgression.length - 1) {
+                return sizeProgression[currentIndex + 1];
+            }
+            return currentSize;
+        }
+
+        // Helper function to create marker icon with custom color
+        function createMarkerIcon(size, hexColor = '#ff6b6b') {
+            const config = {
+                small: { size: [16, 16], anchor: [8, 8], popup: [0, -8], radius: 4 },
+                medium: { size: [24, 24], anchor: [12, 12], popup: [0, -12], radius: 6 },
+                large: { size: [28, 28], anchor: [14, 14], popup: [0, -14], radius: 8 },
+                'extra-large': { size: [40, 40], anchor: [20, 20], popup: [0, -20], radius: 10 }
+            }[size];
+
+            // Create SVG with the specified color (encode # as %23)
+            const encodedColor = hexColor.replace('#', '%23');
+            const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><circle cx="12" cy="12" r="${config.radius}" fill="${encodedColor}" stroke="%23fff" stroke-width="2"/></svg>`;
+
+            return L.icon({
+                iconUrl: 'data:image/svg+xml;utf8,' + svg,
+                iconSize: config.size,
+                iconAnchor: config.anchor,
+                popupAnchor: config.popup
+            });
+        }
+
+        // Helper function to count team seats from election results
+        function countTeamSeats() {
+            const teamCounts = {};
+            for (const seatName in electionResults) {
+                const result = electionResults[seatName];
+                if (result.winnerTeam) {
+                    teamCounts[result.winnerTeam] = (teamCounts[result.winnerTeam] || 0) + 1;
+                }
+            }
+            return teamCounts;
+        }
+
+        // Helper function to create legend item
+        function createLegendItem(color, text) {
+            const item = document.createElement('div');
+            item.className = 'legend-item';
+            item.innerHTML = `
+                <div class="legend-color ${color}"></div>
+                <span>${text}</span>
+            `;
+            return item;
+        }
+
+        // Initialize map
+        function initMap() {
+            const mapContainer = document.getElementById('mapContainer');
+            mapContainer.innerHTML = '<div id="map"></div>';
+
+            map = L.map('map', {
+                zoomControl: false,
+                attributionControl: false
+            }).fitBounds(initialBounds);
+
+            // Load GeoJSON data without tile layer
+            loadGeoJSON();
+        }
+
+        function loadGeoJSON() {
+            fetch('./300SeatMap.json')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('GeoJSON loaded successfully');
+                    addGeoJSONToMap(data);
+                    // Load and add center location markers
+                    loadCenterLocations();
+                })
+                .catch(error => {
+                    console.error('Error loading GeoJSON:', error);
+                    showError('Failed to load map data: ' + error.message);
+                });
+        }
+
+        function loadCenterLocations() {
+            // Load combined locations
+            fetch('./combinedLocations.json')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Combined locations loaded successfully');
+                    addCenterMarkers(data);
+                    populateParliamentSeats();
+                    populateParliamentMap();
+                })
+                .catch(error => {
+                    console.error('Error loading combined locations:', error);
+                });
+        }
+
+        function populateParliamentSeats() {
+            const container = document.getElementById('parliamentContainer');
+            container.querySelectorAll('.parliament-seat').forEach(seat => seat.remove());
+
+            const teamCounts = countTeamSeats();
+            const totalWithResults = Object.values(teamCounts).reduce((a, b) => a + b, 0);
+            const uncountedSeats = 299 - totalWithResults;
+
+            // Group Jamaat-allied parties
+            const groupedCounts = {};
+            let jamaatSeats = 0;
+
+            for (const [team, count] of Object.entries(teamCounts)) {
+                if (JAMAAT_MEMBERS.includes(team)) {
+                    jamaatSeats += count;
+                } else {
+                    groupedCounts[team] = count;
+                }
+            }
+
+            if (jamaatSeats > 0) {
+                groupedCounts['JAMAAT'] = jamaatSeats;
+            }
+
+            const sortedTeams = Object.entries(groupedCounts).sort((a, b) => b[1] - a[1]);
+
+            const seatColors = [];
+
+            // Fill top team
+            if (sortedTeams[0]) {
+                let colorClass = sortedTeams[0][0] === 'JAMAAT' ? 'jamaat' : (teamNameCONST[sortedTeams[0][0]]?.color || 'other');
+                for (let j = 0; j < sortedTeams[0][1]; j++) {
+                    seatColors.push(colorClass);
+                }
+            }
+
+            // Fill uncounted in middle
+            for (let j = 0; j < uncountedSeats; j++) {
+                seatColors.push('other');
+            }
+
+            // Fill second team
+            if (sortedTeams[1]) {
+                let colorClass = sortedTeams[1][0] === 'JAMAAT' ? 'jamaat' : (teamNameCONST[sortedTeams[1][0]]?.color || 'other');
+                for (let j = 0; j < sortedTeams[1][1]; j++) {
+                    seatColors.push(colorClass);
+                }
+            }
+
+            // Create seats
+            const fragment = document.createDocumentFragment();
+            seatColors.forEach(color => {
+                const seat = document.createElement('div');
+                seat.className = 'parliament-seat ' + color;
+                fragment.appendChild(seat);
+            });
+            container.appendChild(fragment);
+
+            updateSeatStatistics();
+        }
+
+        function updateSeatStatistics() {
+            const uniqueTeams = new Set();
+            for (const seatName in electionResults) {
+                if (electionResults[seatName].winnerTeam) {
+                    uniqueTeams.add(electionResults[seatName].winnerTeam);
+                }
+            }
+
+            const teamData = {};
+            let totalWithResults = 0;
+
+            // Initialize all known teams with 0 seats
+            const allTeams = ['BNP', 'JAMAAT_ISLAMI', 'NCP', 'BANGLADESH_KHELAFAT_MAJLIS', 'KHELAFAT_MAJLIS',
+                'BANGLADESH_KHILAFAT_ANDOLAN', 'NIZAM_E_ISLAM_PARTY', 'LIBERAL_DEMOCRATIC_PARTY',
+                'AMAR_BANGLADESH_PARTY', 'JATIYA_GANOTANTRIK_PARTY', 'BANGLADESH_DEVELOPMENT_PARTY',
+                'BANGLADESH_LABOUR_PARTY', 'INDEPENDENT', 'JATIYA_PARTY', 'OTHERS'];
+            for (const team of allTeams) {
+                const teamConfig = teamNameCONST[team];
+                teamData[team] = {
+                    count: 0,
+                    name: teamConfig?.fullName || team,
+                    id: teamConfig?.id || team.toLowerCase(),
+                    color: teamConfig?.color || 'other'
+                };
+            }
+
+            for (const seatName in electionResults) {
+                const result = electionResults[seatName];
+                if (result.winnerTeam && teamData[result.winnerTeam]) {
+                    teamData[result.winnerTeam].count++;
+                    totalWithResults++;
+                }
+            }
+
+            for (const team in teamData) {
+                const data = teamData[team];
+                const percentage = ((data.count / 299) * 100).toFixed(1);
+            }
+
+            updateMajorPartiesList(teamData);
+            updateParliamentLegend(teamData, 299 - totalWithResults);
+        }
+
+        function updateMajorPartiesList(teamData) {
+            const container = document.getElementById('majorPartiesContainer');
+            if (!container) return; // Safety check
+
+            const fragment = document.createDocumentFragment();
+            const isMobile = window.innerWidth <= 768;
+
+            // Separate OTHERS and INDEPENDENT from other teams
+            const teamsToSort = [];
+            let independentTeam = null;
+            let othersTeam = null;
+
+            Object.entries(teamData).forEach(([teamKey, teamInfo]) => {
+                if (teamKey === 'OTHERS') {
+                    othersTeam = [teamKey, teamInfo];
+                } else if (teamKey === 'INDEPENDENT') {
+                    independentTeam = [teamKey, teamInfo];
+                } else {
+                    teamsToSort.push([teamKey, teamInfo]);
+                }
+            });
+
+            // Sort teams by seat count (descending)
+            teamsToSort.sort((a, b) => b[1].count - a[1].count);
+
+            // Take top 3 from sorted teams
+            const topThree = teamsToSort.slice(0, 3);
+
+            // Build the display list: top 3 + independent + others (always 5 teams)
+            let displayTeams = topThree;
+
+            // Always include independent
+            if (independentTeam) {
+                displayTeams.push(independentTeam);
+            }
+
+            // Add top 3 teams to display
+            displayTeams.forEach(([teamKey, teamInfo]) => {
+                const percentage = ((teamInfo.count / 299) * 100).toFixed(1);
+                const hexColor = colorMapCONST[teamInfo.color] || '#e8e8e8';
+                const displayName = (isMobile && teamKey !== 'INDEPENDENT') ? getTeamShortName(teamKey) : teamInfo.name;
+
+                const row = document.createElement('div');
+                row.className = 'seat-row';
+                row.innerHTML = `
+                    <div style="display: inline-block; width: 12px; height: 12px; background: ${hexColor}; margin-right: 8px; border-radius: 2px; vertical-align: middle;"></div>
+                    <strong>${displayName}</strong>
+                    <span class="seat-number">
+                        <span class="seats">${teamInfo.count}</span>
+                        <span class="pipe">|</span>
+                        <span class="percentage">${percentage}%</span>
+                    </span>
+                `;
+                fragment.appendChild(row);
+            });
+
+            // Always add OTHERS at the bottom as the 5th team
+            if (othersTeam) {
+                const [teamKey, teamInfo] = othersTeam;
+                const percentage = ((teamInfo.count / 299) * 100).toFixed(1);
+                const hexColor = colorMapCONST[teamInfo.color] || '#e8e8e8';
+                const displayName = (isMobile && teamKey !== 'INDEPENDENT') ? getTeamShortName(teamKey) : teamInfo.name;
+
+                const row = document.createElement('div');
+                row.className = 'seat-row';
+                row.innerHTML = `
+                    <div style="display: inline-block; width: 12px; height: 12px; background: ${hexColor}; margin-right: 8px; border-radius: 2px; vertical-align: middle;"></div>
+                    <strong>${displayName}</strong>
+                    <span class="seat-number">
+                        <span class="seats">${teamInfo.count}</span>
+                        <span class="pipe">|</span>
+                        <span class="percentage">${percentage}%</span>
+                    </span>
+                `;
+                fragment.appendChild(row);
+            }
+
+            container.innerHTML = '';
+            container.appendChild(fragment);
+        }
+
+        function getTeamShortName(teamKey) {
+            const shortNames = {
+                'BNP': 'BNP',
+                'JAMAAT_ISLAMI': 'Jamaat',
+                'NCP': 'NCP',
+                'BANGLADESH_KHELAFAT_MAJLIS': 'BKM',
+                'KHELAFAT_MAJLIS': 'KM',
+                'BANGLADESH_KHILAFAT_ANDOLAN': 'BKA',
+                'NIZAM_E_ISLAM_PARTY': 'NIP',
+                'LIBERAL_DEMOCRATIC_PARTY': 'LDP',
+                'AMAR_BANGLADESH_PARTY': 'ABP',
+                'JATIYA_GANOTANTRIK_PARTY': 'JGP',
+                'BANGLADESH_DEVELOPMENT_PARTY': 'BDP',
+                'BANGLADESH_LABOUR_PARTY': 'BLP',
+                'INDEPENDENT': 'IND',
+                'JATIYA_PARTY': 'JWP',
+                'OTHERS': 'Others'
+            };
+            return shortNames[teamKey] || teamKey;
+        }
+
+        function updateParliamentLegend(teamData, uncountedSeats) {
+            const legendContainer = document.getElementById('parliamentLegend');
+            const fragment = document.createDocumentFragment();
+
+            const isMobile = window.innerWidth <= 768;
+
+            // Group Jamaat-allied parties and calculate combined seats
+            const groupedTeamData = {};
+            let jamaatSeats = 0;
+
+            for (const [teamKey, teamInfo] of Object.entries(teamData)) {
+                if (JAMAAT_MEMBERS.includes(teamKey)) {
+                    jamaatSeats += teamInfo.count;
+                } else {
+                    groupedTeamData[teamKey] = teamInfo;
+                }
+            }
+
+            // Add Jamaat group if it has seats
+            if (jamaatSeats > 0) {
+                groupedTeamData['JAMAAT'] = {
+                    count: jamaatSeats,
+                    name: 'Jamaat Alliance',
+                    color: 'jamaat'
+                };
+            }
+
+            const sortedTeamsEntries = Object.entries(groupedTeamData).sort((a, b) => b[1].count - a[1].count);
+
+            // Add top team (left side of bar)
+            if (sortedTeamsEntries[0]) {
+                const teamKey = sortedTeamsEntries[0][0];
+                const teamInfo = sortedTeamsEntries[0][1];
+                const displayName = isMobile ? (teamKey === 'JAMAAT' ? 'Jamaat' : getTeamShortName(teamKey)) : `${teamInfo.name}`;
+                fragment.appendChild(createLegendItem(teamInfo.color, `${displayName} (${teamInfo.count} seats)`));
+            }
+
+            // Add uncounted seats (middle of bar)
+            if (uncountedSeats > 0) {
+                fragment.appendChild(createLegendItem('other', `Uncounted (${uncountedSeats} seats)`));
+            }
+
+            // Add second team (right side of bar)
+            if (sortedTeamsEntries[1]) {
+                const teamKey = sortedTeamsEntries[1][0];
+                const teamInfo = sortedTeamsEntries[1][1];
+                const displayName = isMobile ? (teamKey === 'JAMAAT' ? 'Jamaat' : getTeamShortName(teamKey)) : `${teamInfo.name}`;
+                fragment.appendChild(createLegendItem(teamInfo.color, `${displayName} (${teamInfo.count} seats)`));
+            }
+
+            legendContainer.innerHTML = '';
+            legendContainer.appendChild(fragment);
+        }
+
+        function populateParliamentMap() {
+            const container = document.getElementById('parliamentMapContainer');
+            const teamSeats = {};
+
+            for (const seatName in electionResults) {
+                const result = electionResults[seatName];
+                if (result.winnerTeam) {
+                    if (!teamSeats[result.winnerTeam]) teamSeats[result.winnerTeam] = [];
+                    teamSeats[result.winnerTeam].push(seatName);
+                }
+            }
+
+            const seatColors = [];
+
+            // Sort teams by seat count, maintaining individual party identities
+            const orderedTeams = Object.entries(teamSeats)
+                .sort((a, b) => b[1].length - a[1].length);
+
+            // Add seats by team with individual colors
+            for (const [team, seats] of orderedTeams) {
+                let colorClass = teamNameCONST[team]?.color || 'other';
+                for (let i = 0; i < seats.length; i++) {
+                    seatColors.push(colorClass);
+                }
+            }
+
+            // Add uncounted seats at the end
+            const totalWithResults = seatColors.length;
+            const uncountedSeats = 299 - totalWithResults;
+            for (let i = 0; i < uncountedSeats; i++) {
+                seatColors.push('other');
+            }
+
+            const fragment = document.createDocumentFragment();
+            seatColors.forEach((color, i) => {
+                const seat = document.createElement('div');
+                seat.className = 'parliament-map-seat ' + color;
+                seat.title = `Seat ${i + 1}`;
+                fragment.appendChild(seat);
+            });
+            container.appendChild(fragment);
+        }
+
+        function addCenterMarkers(combinedData) {
+            centerMarkers = [];
+
+            combinedData.forEach((item, index) => {
+                const { centerLocation, nearestSeat, polygonIndex } = item;
+                const lat = centerLocation.latitude;
+                const lng = centerLocation.longitude;
+                const seatName = nearestSeat.name;
+
+                // Get election data for this seat
+                const electionData = electionResults[seatName] || {};
+                const totalVotes = electionData.totalVoteCount || 0;
+                const winnerName = electionData.winnerName || 'N/A';
+                const winnerVotes = electionData.winnerVoteCount || 0;
+                const winnerTeam = electionData.winnerTeam || '';
+                const votePercentage = totalVotes > 0 ? ((winnerVotes / totalVotes) * 100).toFixed(1) : '0.0';
+
+                // Get team color from teamNameCONST
+                const teamConfig = teamNameCONST[winnerTeam];
+                const teamColor = winnerTeam ? (teamConfig ? teamConfig.color : 'other') : null;
+                const hexColor = teamColor ? (colorMapCONST[teamColor] || '#e8e8e8') : '#e8e8e8';
+
+                // Create a marker with a custom icon using team color
+                const marker = L.marker([lat, lng], {
+                    title: seatName,
+                    icon: createMarkerIcon('medium', hexColor)
+                });
+
+                // Store team data on marker for later use
+                marker.teamColor = teamColor;
+                marker.hexColor = hexColor;
+                marker.winnerTeam = winnerTeam;
+                marker.seatName = seatName;
+
+                // Add hover effects
+                marker.on('mouseover', function () {
+                    const hoverSize = getHoverIconSize(getCurrentIconSize());
+                    if (winnerTeam) {
+                        // Team has results - make it bigger
+                        this.setIcon(createMarkerIcon(hoverSize, hexColor));
+                    } else {
+                        // No results - change to darker gray and make bigger
+                        this.setIcon(createMarkerIcon(hoverSize, '#999999'));
+                    }
+                });
+
+                marker.on('mouseout', function () {
+                    // Restore original size and color
+                    this.setIcon(createMarkerIcon(getCurrentIconSize(), hexColor));
+                });
+
+                // Bind popup with election data using consistent colors
+                marker.bindPopup(`
+                    <div style="padding: 10px; min-width: 220px;">
+                        <div style="font-weight: bold; font-size: 1.1em; margin-bottom: 8px;">${seatName}</div>
+                        <div style="border-bottom: 1px solid #ccc; padding-bottom: 8px; margin-bottom: 8px;">
+                            <div><b>Total Votes:</b> ${totalVotes.toLocaleString()}</div>
+                        </div>
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                                <div style="width: 14px; height: 14px; background: ${hexColor}; border-radius: 2px; flex-shrink: 0;"></div>
+                                <span><b>Winner Team:</b> ${winnerTeam || 'N/A'}</span>
+                            </div>
+                            <div><b>Winner:</b> ${winnerName}</div>
+                            <div><b>Winner Votes:</b> ${winnerVotes.toLocaleString()} (${votePercentage}%)</div>
+                        </div>
+                    </div>
+                `);
+
+                // Initially add to map
+                marker.addTo(map);
+
+                // Add click handler to open popup
+                marker.on('click', function () {
+                    this.openPopup();
+                });
+
+                centerMarkers.push({ marker, seatName, lat, lng, teamColor, hexColor });
+            });
+
+            // Add zoom event listener to show/hide markers and make them interactive based on zoom
+            map.on('zoomend', function () {
+                const currentZoom = map.getZoom();
+                const isZoomedIn = currentZoom >= 9;
+
+                // Determine icon size based on zoom level - grow proportionally when zoomed in
+                let iconSize = 'medium';
+                if (currentZoom < 7) {
+                    iconSize = 'small';
+                } else if (currentZoom >= 7 && currentZoom < 9) {
+                    iconSize = 'medium';
+                } else if (currentZoom >= 9) {
+                    iconSize = 'large';
+                }
+
+                centerMarkers.forEach(({ marker, seatName, teamColor, hexColor }) => {
+                    marker.setIcon(createMarkerIcon(iconSize, hexColor));
+                    if (isZoomedIn && !marker.getTooltip()) {
+                        const tooltipContent = `<div style="display: flex; align-items: center; gap: 6px;"><div style="width: 12px; height: 12px; background: ${hexColor}; border-radius: 2px;"></div><span>${seatName}</span></div>`;
+                        marker.bindTooltip(tooltipContent, {
+                            permanent: true,
+                            direction: 'top',
+                            className: 'seat-label',
+                            offset: [0, -10],
+                            html: true
+                        });
+
+                        // Add click handler to tooltip to open popup
+                        setTimeout(() => {
+                            const tooltip = marker.getTooltip();
+                            if (tooltip && tooltip._container) {
+                                tooltip._container.style.cursor = 'pointer';
+                                tooltip._container.addEventListener('click', () => marker.openPopup());
+                            }
+                        }, 0);
+                    } else if (!isZoomedIn && marker.getTooltip()) {
+                        marker.unbindTooltip();
+                    }
+                });
+            });
+
+            console.log(`Added ${centerMarkers.length} center location markers`);
+        }
+
+        function addGeoJSONToMap(geojson) {
+            const geojsonLayer = L.geoJSON(geojson, {
+                style: getFeatureStyle,
+                onEachFeature: onEachFeature,
+                pointToLayer: function (feature, latlng) {
+                    return L.circleMarker(latlng, {
+                        radius: 6,
+                        fillColor: '#667eea',
+                        color: '#fff',
+                        weight: 2,
+                        opacity: 1,
+                        fillOpacity: 0.8
+                    });
+                }
+            });
+
+            geojsonLayer.addTo(map);
+            map.fitBounds(geojsonLayer.getBounds());
+        }
+
+        function getFeatureStyle(feature) {
+            return {
+                fillColor: '#e8f0ff',
+                weight: 2,
+                opacity: 1,
+                color: '#667eea',
+                fillOpacity: 0.9
+            };
+        }
+
+        function onEachFeature(feature, layer) {
+            // Store the original style
+            layer.originalStyle = {
+                fillColor: '#e8f0ff',
+                weight: 2,
+                opacity: 1,
+                color: '#667eea',
+                fillOpacity: 0.9
+            };
+
+            // No hover effect on edges
+        }
+
+
+        function zoomIn() {
+            map.zoomIn();
+        }
+
+        function zoomOut() {
+            map.zoomOut();
+        }
+
+        function resetView() {
+            map.fitBounds(initialBounds);
+            // Reset marker sizes to medium
+            centerMarkers.forEach(({ marker, hexColor }) => {
+                marker.setIcon(createMarkerIcon('medium', hexColor));
+            });
+        }
+
+        function showError(message) {
+            const mapContainer = document.getElementById('mapContainer');
+            mapContainer.innerHTML = `<div class="error">${message}</div>`;
+        }
+
+        // Initialize map when page loads
+        window.addEventListener('load', initMap);
+
+        // GoatCounter integration - fetch visitor count JSON
+        window.addEventListener('load', function () {
+            // We fetch just the number (JSON), no fonts or CSS involved!
+            var url = 'https://arifultimate.goatcounter.com/counter/TOTAL.json';
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('visitor-count').innerText = data.count + " Visitors";
+                })
+                .catch(err => console.log("Counter blocked by ad-blocker or CSP"));
+        });
+
+        // Referendum bar — use manual variables `REF_Y` and `REF_NO` (set these yourself)
+        function initReferendumBar() {
+            // Values come from `public/electionResults.js` (window.REF_Y / window.REF_NO).
+            // If not set there, they remain undefined and will be treated as 0 below.
+            // Read both possible variable names for compatibility: `REF_YES` or legacy `REF_Y`.
+            const yesSource = (typeof window.REF_YES !== 'undefined') ? window.REF_YES : window.REF_Y;
+            const noSource = (typeof window.REF_NO !== 'undefined') ? window.REF_NO : window.REF_NO;
+            const yesVotes = Math.max(0, parseInt(yesSource, 10) || 0);
+            const noVotes = Math.max(0, parseInt(noSource, 10) || 0);
+
+            // TOTAL_VOTES is the sum of yes and no as requested
+            const TOTAL_VOTES = yesVotes + noVotes;
+
+            const yesEl = document.getElementById('refYes');
+            const noEl = document.getElementById('refNo');
+            const totalLabel = document.getElementById('referendumTotalLabel');
+            const legendYes = document.getElementById('legendYesCount');
+            const legendNo = document.getElementById('legendNoCount');
+
+            if (!yesEl || !noEl) return;
+
+            // If there are no votes, hide both segments
+            if (TOTAL_VOTES > 0) {
+                yesEl.style.display = 'flex';
+                yesEl.style.width = ((yesVotes / TOTAL_VOTES) * 100) + '%';
+
+                noEl.style.display = 'flex';
+                noEl.style.width = ((noVotes / TOTAL_VOTES) * 100) + '%';
+            } else {
+                yesEl.style.display = 'none';
+                yesEl.style.width = '0%';
+                noEl.style.display = 'none';
+                noEl.style.width = '0%';
+            }
+
+            // Update totals and legends
+            totalLabel.innerText = `Total votes: ${TOTAL_VOTES.toLocaleString()}`;
+            if (legendYes) legendYes.innerText = yesVotes.toLocaleString();
+            if (legendNo) legendNo.innerText = noVotes.toLocaleString();
+
+            // Ensure undecided UI (if present) is hidden since undecided is no longer used
+            const undecEl = document.getElementById('refUndecided');
+            const legendUndec = document.getElementById('legendUndecidedCount');
+            if (undecEl) {
+                undecEl.style.display = 'none';
+                undecEl.style.width = '0%';
+            }
+            if (legendUndec) {
+                const item = legendUndec.closest('.ref-legend-item');
+                if (item) item.style.display = 'none';
+            }
+        }
+
+        // Expose helper for manual updates
+        window.initReferendumBar = initReferendumBar;
+        window.addEventListener('load', initReferendumBar);
+
+
+    </script>
+    <script src="parliamentSeatChart.js"></script>
+</body>
+
+</html>
